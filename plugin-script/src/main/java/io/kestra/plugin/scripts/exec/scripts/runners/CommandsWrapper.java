@@ -135,8 +135,6 @@ public class CommandsWrapper {
 
     @SuppressWarnings("unchecked")
     public ScriptOutput run() throws Exception {
-        RunnerResult runnerResult;
-
         if (this.namespaceFiles != null) {
             String tenantId = ((Map<String, String>) runContext.getVariables().get("flow")).get("tenantId");
             String namespace = ((Map<String, String>) runContext.getVariables().get("flow")).get("namespace");
@@ -155,11 +153,12 @@ public class CommandsWrapper {
             FilesService.inputFiles(runContext, this.inputFiles);
         }
 
-        if (runnerType.equals(RunnerType.DOCKER)) {
-            runnerResult = new DockerScriptRunner(runContext.getApplicationContext()).run(this, this.dockerOptions);
-        } else {
-            runnerResult = new ProcessBuilderScriptRunner().run(this);
-        }
+        ScriptRunner scriptRunner = switch (runnerType) {
+            case DOCKER -> new DockerScriptRunner(runContext.getApplicationContext(), this.dockerOptions);
+            case PROCESS -> new ProcessBuilderScriptRunner();
+            case KUBERNETES -> new KubernetesScriptRunner(this.dockerOptions);
+        };
+        RunnerResult runnerResult = scriptRunner.run(this);
 
         Map<String, URI> outputFiles = ScriptService.uploadOutputFiles(runContext, outputDirectory);
 

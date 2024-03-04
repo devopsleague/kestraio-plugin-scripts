@@ -44,20 +44,21 @@ import java.util.stream.Collectors;
 import static io.kestra.core.utils.Rethrow.throwConsumer;
 import static io.kestra.core.utils.Rethrow.throwFunction;
 
-public class DockerScriptRunner {
+public class DockerScriptRunner implements ScriptRunner {
     private static final ReadableBytesTypeConverter READABLE_BYTES_TYPE_CONVERTER = new ReadableBytesTypeConverter();
     public static final Pattern NEWLINE_PATTERN = Pattern.compile("([^\\r\\n]+)[\\r\\n]+");
 
     private final RetryUtils retryUtils;
-
     private final Boolean volumesEnabled;
+    private final DockerOptions dockerOptions;
 
-    public DockerScriptRunner(ApplicationContext applicationContext) {
+    public DockerScriptRunner(ApplicationContext applicationContext, DockerOptions dockerOptions) {
         this.retryUtils = applicationContext.getBean(RetryUtils.class);
         this.volumesEnabled = applicationContext.getProperty(
             "kestra.tasks.scripts.docker.volume-enabled",
             Boolean.class
         ).orElse(false);
+        this.dockerOptions = dockerOptions;
     }
 
 
@@ -84,7 +85,8 @@ public class DockerScriptRunner {
         return DockerService.client(dockerClientConfig);
     }
 
-    public RunnerResult run(CommandsWrapper commands, DockerOptions dockerOptions) throws Exception {
+    @Override
+    public RunnerResult run(CommandsWrapper commands) throws Exception {
         if (dockerOptions == null) {
             throw new IllegalArgumentException("Missing required docker properties");
         }

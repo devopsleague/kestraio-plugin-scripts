@@ -9,7 +9,9 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.Map;
 
-public class ProcessBuilderScriptRunner {
+public class ProcessBuilderScriptRunner implements ScriptRunner {
+
+    @Override
     public RunnerResult run(CommandsWrapper commands) throws Exception {
         Logger logger = commands.getRunContext().logger();
         Path workingDirectory = commands.getWorkingDirectory();
